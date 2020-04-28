@@ -1,0 +1,5 @@
+recursive-include lib/python/scalop/anarci/dat *.hmm*
+recursive-include lib/python/scalop/data *.pickle
+recursive-include example *.fasta
+include lib/python/scalop/anarci.Bio.BioPython_LICENCE
+include README

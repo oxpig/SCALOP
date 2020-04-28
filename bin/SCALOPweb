@@ -1,0 +1,190 @@
+#! /usr/bin/env python
+#  SCALOP - Sequence-based antibody Canonical LOoP structure annotation
+import datetime, os, json
+from scalop.utils import write_txt
+
+description="""
+
+DESCRIPTION
+ 
+        SCALOP
+        Sequence-based antibody Canonical LOoP structure annotation
+ 
+        o To setup paths etc on your machine run:
+                python setup.py install
+
+        o Python API
+                o The SCALOP python package can be imported using:
+                >>> from scalop.predict import assign
+                
+        o Command line 
+                o To run SCALOP on a command line:
+                $ SCALOP -i <input_sequence> --scheme <numbering_scheme> --definition <cdr_definition>
+                
+        o Pre-requisite:
+                o SAbDab
+                o HMMER 3.1b2 (February 2015); http://hmmer.org/
+                o numpy
+                o pandas
+
+
+"""
+epilogue="""
+AUTHORS
+ 
+        {0}
+        Wing Ki Wong
+        Dr. Jinwoo Leem
+        Prof Charlotte M. Deane - Oxford Protein Informatics group.
+
+        Contact: opig@stats.ox.ac.uk
+
+Copyright (C) {0} Oxford Protein Informatics Group (OPIG)
+""".format(datetime.datetime.now().year)
+
+
+
+def format_json( results, scheme="imgt", definition='north',outputdir = "", opf = "", input_file="Input_sequence",outpdbf=False, hc = '', lc = ''):
+        """
+        Format a json object and print it to stdout.
+        """
+        jsonob = {}
+        jsonob["Nsequences"]     = len(results)
+        jsonob["scheme"]         = scheme.lower()
+        jsonob["definition"]     = definition.lower()
+        jsonob["outputdir"]                  = outputdir
+        jsonob["opf"]                                   = opf
+        jsonob["input_name"]     = input_file
+        jsonob["anyproc"]        = False
+        jsonob["assignment"]          = []
+        jsonob["outpdbf"]                  = outpdbf
+        jsonob["hc"]                                  = hc
+        jsonob["lc"]                                  = lc
+        
+        for ipid in range(len(results)):
+                if results[ipid]["outputs"] == {}:
+                        jsonob["assignment"].append({"input_name":results[ipid]["seqname"],"input_seq":results[ipid]["input"],"outputs":None})
+                else:
+                        jsonob["assignment"].append({"input_name":results[ipid]["seqname"],"input_seq":results[ipid]["input"],"outputs":sorted(results[ipid]["outputs"].items())})
+
+        if len(jsonob["assignment"]) > 0: jsonob["anyproc"] = True
+
+        return jsonob #json.dumps(jsonob, separators=(',',':'))
+
+def which(name, flags=os.X_OK):
+        """
+        Search PATH for executable files with the given name.
+        
+        On newer versions of MS-Windows, the PATHEXT environment variable will be
+        set to the list of file extensions for files considered executable. This
+        will normally include things like ".EXE". This fuction will also find files
+        with the given name ending with any of these extensions.
+        
+        On MS-Windows the only flag that has any meaning is os.F_OK. Any other
+        flags will be ignored.
+        
+        @type name: C{str}
+        @param name: The name for which to search.
+        
+        @type flags: C{int}
+        @param flags: Arguments to L{os.access}.
+        
+        @rtype: C{list}
+        @param: A list of the unique full paths to files found, in the
+        order in which they were found.
+        """
+        result = []
+        exts = [_f for _f in os.environ.get('PATHEXT', '').split(os.pathsep) if _f]
+        path = os.environ.get('PATH', None)
+        if path is None:
+                return []
+        for p in os.environ.get('PATH', '').split(os.pathsep):
+                p = os.path.join(p, name)
+                if os.access(p, flags):
+                        result.append(p)
+                for e in exts:
+                        pext = p + e
+                        if os.access(pext, flags):
+                                result.append(pext)
+        return list(set(result))
+        
+if __name__ == "__main__":
+        import argparse, sys
+        try:
+                from scalop.predict import assignweb
+        except ImportError as e:
+                print("Fatal Error:", e, file=sys.stderr)
+                sys.exit(1)
+        
+        parser = argparse.ArgumentParser(prog="SCALOPweb", description=description, epilog=epilogue,formatter_class=argparse.RawDescriptionHelpFormatter)
+        parser.add_argument('--numbering_scheme', '--scheme',
+                                                          type=str,default='imgt', 
+                                                          choices=['imgt','chothia'],
+                                                          help="Antibody chain numbering scheme",
+                                                          dest="scheme")
+        parser.add_argument('--cdr_definition', '--definition',
+                                                          type=str,default='north',
+                                                          choices=['north','imgt','chothia'], 
+                                                          help="CDR region definition", 
+                                                          dest="definition")
+                                                          
+        # Take input sequence(s) and assign
+        parser.add_argument('-i','--assign',
+                                                          type=str,default='', 
+                                                          help="Input sequence(s)", 
+                                                          dest="seq")
+        # Specify output directory
+        parser.add_argument('-o','--outputdir',
+                                                          default="", 
+                                                          help="Output directory (default = console output)", 
+                                                          dest="outputdir")
+        parser.add_argument('-dbv','--db_version',
+                       type=str,default='latest', 
+                       help="Database version in YYYY-MM (e.g. '2017-07') or YYYY for data included by the end of the year", 
+                       dest="dbv")        
+        # Build structure if they really want it
+        parser.add_argument('-s','--structure',
+                       type=str, default='', 
+                       help="Input framework structure", 
+                       dest="structuref")
+        parser.add_argument('--loopdb',
+                       type=str, default='', 
+                       help="Loop structures directory", 
+                       dest="loopdb")
+        parser.add_argument('--hc',
+                       type=str, default='', 
+                       help="Heavy Chain ID", 
+                       dest="hc")
+        parser.add_argument('--lc',
+                       type=str, default='', 
+                       help="Light Chain ID", 
+                       dest="lc")
+        args = parser.parse_args()
+        args.outputformat = 'txt' # fix for download
+        if len(args.dbv) == 4: args.dbv += '-12'
+        ######################
+   # Input housekeeping #
+   ######################
+
+        if len(sys.argv) <2:
+                parser.print_help()
+                sys.exit(0)
+
+        if True:
+            results,opf,outpdbf = assignweb(args)
+            if os.path.isfile(args.seq): input_file = args.seq
+            else: input_file = "Input sequence"
+            
+            #print("<script>var results = "+format_json( results, scheme=args.scheme, definition=args.definition, outputdir=args.outputdir, opf=opf, input_file=input_file, outpdbf=outpdbf, hc = args.hc, lc = args.lc )+";</script>")
+            results = format_json( results, scheme=args.scheme, definition=args.definition, outputdir=args.outputdir, opf=opf, input_file=input_file, outpdbf=outpdbf, hc = args.hc, lc = args.lc )
+            with open(os.path.join(args.outputdir, 'results.json'), 'w') as outfile:
+                json.dump(results, outfile)
+        #except Exception as e:
+        #        print("Error: ", repr(e), file=sys.stderr)
+        #        sys.exit(1)
+                
+        sys.exit(0)
+
+
+
+

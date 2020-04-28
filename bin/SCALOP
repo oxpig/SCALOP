@@ -1,0 +1,148 @@
+#! /usr/bin/python
+# SCALOP - Sequence-based antibody Canonical LOoP structure annotation
+
+import datetime
+description="""
+
+DESCRIPTION
+ 
+    SCALOP
+    Sequence-based antibody Canonical LOoP structure annotation
+ 
+    o To setup paths etc on your machine run:
+        python setup.py install
+
+    o Python API
+        o The SCALOP python package can be imported using:
+        >>> from scalop.predict import assign
+        
+    o Command line 
+        o To run SCALOP on a command line:
+        $ SCALOP -i <input_sequence> --scheme <numbering_scheme> --definition <cdr_definition>
+        
+    o Pre-requisites:
+        o SAbDab (for update)
+        o HMMER 3.1b2 (February 2015); http://hmmer.org/
+        o numpy v. 1.10+
+        o pandas
+
+
+"""
+epilogue="""
+AUTHORS
+ 
+    {0}
+    Wing Ki Wong
+    Dr. Jinwoo Leem
+    Prof Charlotte M. Deane - Oxford Protein Informatics group.
+
+    Contact: opig@stats.ox.ac.uk
+
+Copyright (C) {0} Oxford Protein Informatics Group (OPIG)
+Freely distributed under the GNU General Public License (GPLv3).
+""".format(datetime.datetime.now().year)
+
+if __name__ == '__main__':
+    import sys, os
+    import argparse
+
+    parser = argparse.ArgumentParser(prog="SCALOP", description=description, epilog=epilogue,formatter_class=argparse.RawDescriptionHelpFormatter)
+	
+    # numbering and definition
+    parser.add_argument('--numbering_scheme', '--scheme',
+                              type=str,default='imgt', 
+                              choices=['imgt','chothia'],
+                              help="Antibody chain numbering scheme",
+                              dest="scheme")
+    parser.add_argument('--cdr_definition', '--definition',
+                              type=str,default='north',
+                              choices=['north','imgt','chothia'], 
+                              help="CDR region definition", 
+                              dest="definition")
+    
+    # Take input sequence(s) and assign
+    parser.add_argument('-i','--assign',
+                              type=str,default='', 
+                              help="Input sequence(s)", 
+                              dest="seq")
+    # Specify output directory
+    parser.add_argument('-o','--output',
+                              default=False, 
+                              help="Output directory (default = console output)", 
+                              dest="outputdir")
+    
+    parser.add_argument('-of','--output_ext',
+                              type=str,default='txt', 
+                              help="Output format", 
+                              dest="outputformat")  
+    parser.add_argument('-dbv','--db_version',
+                              type=str,default='latest', 
+                              help="Database version in YYYY-MM (e.g. '2017-07') or YYYY for data included by the end of the year", 
+                              dest="dbv")
+    parser.add_argument('-s','--structure',
+                       type=str, default='', 
+                       help="Input framework structure", 
+                       dest="structuref")
+    parser.add_argument('--loopdb',
+                       type=str, default='', 
+                       help="Loop structures directory", 
+                       dest="loopdb")
+    parser.add_argument('--hc',
+                       type=str, default='', 
+                       help="Heavy Chain ID", 
+                       dest="hc")
+    parser.add_argument('--lc',
+                       type=str, default='', 
+                       help="Light Chain ID", 
+                       dest="lc")
+
+    # Updater commands
+    parser.add_argument('--update','-u',
+                              action='store_true', 
+                              help="Perform an update to a copy of the database that you have write permissions for")
+    parser.add_argument('--dbdir',
+						type=str, 
+						help="[for updater] Loop database directory", 
+						dest="dbdir")
+    parser.add_argument('--struc_cutoff','--cutoff',
+						type=float,
+						default=2.8, 
+						help="[for updater] Resolution of structures to be clustered", 
+						dest="struc_cutoff")
+    parser.add_argument('--bfactor_cutoff','--bfactor',
+						type=float,
+						default=80.0, 
+						help="[for updater] Maximum B factor of backbone atoms in the loop", 
+						dest="bfactor")
+
+    # Specific for the updater
+    parser.add_argument('--arma_inc','--armadillo_include',
+						type=str, default = '',
+						help="[for updater] Resolution of structures to be clustered", 
+						dest="arma_inc")
+    parser.add_argument('--sabdabscript','--script','--bin','--sabdabdir',
+						type=str, default = '~/bin/',
+						help="[for updater] Location of SAbDab bin script (e.g. ~/bin/)", 
+						dest="sabdabdir")	
+    parser.add_argument('--pylib','--sabdabpydir',
+						type=str, default = '~/bin/Python/ABDB',
+						help="[for updater] Location of ABDB python module (e.g. ~/bin/Python/ABDB)", 
+						dest="sabdabpydir")	 
+    parser.add_argument('--sabdabu',
+						type=str, default = 'yes',
+						help="[for updater] Whether or not to update SAbDab ([yes]/no)", 
+						dest="sabdabu")	
+						 
+    args=parser.parse_args()
+    if len(args.dbv) == 4: args.dbv += '-12'
+    
+
+    if args.update:
+        from scalop.updatedb import update
+        update(args)
+    elif args.seq:
+        from scalop.predict import assigncmd
+        assigncmd(args)
+    else:
+        parser.print_help()
+        sys.exit(0)
