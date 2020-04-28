@@ -18,10 +18,10 @@ DESCRIPTION
         >>> from scalop.predict import assign
         o Results are shown as follows:
         {'input':                                              # Input sequence name 
-        		{'H1':                                             # CDR type
-        			['H1', 'TASGFNIKDYYIH', 'H1-13-A', '4hie_B'],   # CDR type, CDR on the input sequence, assigned cluster, median structure of the cluster
-         	'H2': 
-        			['H2', 'WIDPEIGDTE', 'H2-10-A', '1aj7_H']}
+     	    {'H1':                                             # CDR type
+                ['H1', 'TASGFNIKDYYIH', 'H1-13-A', '4hie_B'],  # CDR type, CDR on the input sequence, assigned cluster, median structure of the cluster
+             'H2': 
+                ['H2', 'WIDPEIGDTE', 'H2-10-A', '1aj7_H']}
         }
         
     o Command line 
