@@ -28,8 +28,9 @@ def ip(scheme,definition,dbv):
     if not os.path.exists(os.path.join(scalop_path,'database',fname)):
         sys.stderr.write('Database {0} not found. Please review the database directory.'%dbv)
         sys.exit(1)
-    with open(os.path.join(scalop_path,'database',fname)) as f:
-        outm,clustercenters,_ = pickle.load(f) 
+    with open(os.path.join(scalop_path,'database',fname), 'rb') as f:
+        outm,clustercenters,_ = pickle.load(f, encoding='latin1') 
+
 def _score_licanonicalliPSSM(sequence, pssm):
     score = float(0)
     for pos,res in sequence:
