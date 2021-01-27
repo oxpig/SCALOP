@@ -81,7 +81,7 @@ class ResidueList(list):
   def __add__(self, other):
     return ResidueList(list.__add__(self, other))
   def __radd__(self, other):
-    return ResidueList(list.__radd__(self, other))
+    return ResidueList(list.__add__(self, other))
   def __iadd__(self, other):
     self.extend(other)
     return self
@@ -303,11 +303,11 @@ class Residue(object):
   
   
   def __str__(self):
-    s=array('c')
+    s=""
     for a in self:
-      s.extend(str(a))
-      s.extend("\n")
-    return s.tostring()
+      s += str(a)
+      s += "\n"
+    return s
   
   
   def __repr__(self):

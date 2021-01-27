@@ -609,7 +609,7 @@ class Pdb(object):
         self.chainlimits[prev.chain] = [0]
         
         for i,atom in enumerate(self):
-            if (prev.chain != atom.chain) or (prev > atom):
+            if (prev.chain != atom.chain) or (prev.iatom > atom.iatom):
                 # Terminate previous chain
                 if prev.chain not in self.chainlimits:
                     self.chainlimits[prev.chain] = [i]
@@ -1075,7 +1075,7 @@ class Pdb(object):
         if not len(self):
           return ""
         
-        output = array('c', "TITLE     %-70s\n"%(self.code))
+        output = array('u', 'TITLE     %-70s\n'%(self.code))
         tempatm = self[0].copy()
         
         resnum=1
@@ -1231,12 +1231,12 @@ class Pdb(object):
         if len(self) == 0:
           return ""
         
-        seq = array('c')
+        seq = [] #seq = array('u')
         
         prev = self[0]
         
         if gapped and firstres and prev.ires > firstres:
-          seq.extend('-'*(prev.ires-firstres))
+          seq += ['-'] * (prev.ires-firstres) #seq.extend('-'*(prev.ires-firstres))
         
         seq.append(residueLetter(prev.res))
         
@@ -1249,15 +1249,15 @@ class Pdb(object):
               if   curr.chain != prev.chain:  # start of new chain
                   seq.append('/')
               elif not (curr.ires  == prev.ires+1 or (curr.ires == prev.ires and curr.inscode != prev.inscode)): # gap in same chain
-                  seq.extend('-'*(curr.ires-prev.ires-1))
+                  seq += ['-'] * (curr.ires-prev.ires-1) #seq.extend('-'*(curr.ires-prev.ires-1))
             
             seq.append(residueLetter(curr.res))
             prev = curr
         
         if gapped and lastres and prev.ires < lastres:
-          seq.extend('-'*(lastres-prev.ires))
-        
-        return seq.tostring()
+          seq += ['-'] * (lastres-prev.ires) #seq.extend('-'*(lastres-prev.ires)); 
+       
+        return "".join(seq) #return seq.tostring()
     
     
     def get_root_object(self):

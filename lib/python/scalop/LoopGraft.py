@@ -4,6 +4,7 @@ graft_loop.py
 Description:    Follows on from FREAD but is a simpler, loop grafting method
 Jun 23, 2016
 """
+
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import sys, os, json, re, datetime, pickle, math
 import numpy as np
@@ -107,8 +108,8 @@ def export_structure(args, assignmentresults, output=''):
 	else:
 		fname = '{0}_{1}_v{2}.pickle'.format(args.scheme,args.definition,args.dbv)	
 
-	with open(os.path.join(scalop_path,'database',fname)) as f:
-		_,_,cm = pickle.load(f) 
+	with open(os.path.join(scalop_path,'database',fname), 'rb') as f:
+		_,_,cm = pickle.load(f, encoding="latin1") 
 	with open(os.path.join(scalop_path,'database','{0}_{1}.freaddb'.format(args.scheme,args.definition))) as f:
 		freaddb = json.load(f) 
 	
@@ -127,7 +128,7 @@ def export_structure(args, assignmentresults, output=''):
 		iscompletestruc = scalopres['input'][1]==p_istructure.get_chain(c).get_seq()
 		localpdb = p_istructure.get_chain(c)
 		if not iscompletestruc:
-			cdrlens = [len(n[1]) for n in sorted(scalopres['outputs'].values())]
+			cdrlens = [len(n[1]) for n in sorted(scalopres['outputs'].values())];
 			if len(localpdb.get_seq()) + sum(cdrlens) != len(scalopres['input'][1]): 
 				print('The input structure ({}) and CDR sequences ({}) do not match with input sequence ({})'.format(len(localpdb.get_seq()) , sum(cdrlens) , len(scalopres['input'][1])))
 				continue
@@ -162,8 +163,8 @@ def export_structure(args, assignmentresults, output=''):
                         p_loop = Pdb(str(os.path.join(args.loopdb,'{0}_{1}'.format(args.scheme,args.definition),cdr,loopname+'.pdb')))
                         rloop = ResidueList(p_loop).deep_copy()[3:-3]
                         ccd.superimpose_withloop(anchors,i_N+i_C,rloop)
-                        i_Nn = i_N.deep_copy()
-                        i_Cn = i_C.deep_copy()
+                        i_Nn = ResidueList(i_N).deep_copy()
+                        i_Cn = ResidueList(i_C).deep_copy()
                         meld(i_Nn, rloop[:2])
                         meld(i_Cn, rloop[-2:], invertWeights = True)
                         rloop = rloop[2:-2]
@@ -175,7 +176,7 @@ def export_structure(args, assignmentresults, output=''):
                         for loopi in range(len(rloop)):
                                 rloop[loopi].set_type(residueCode(loop[loopi]))
                         if c not in loopstograft: loopstograft.update({c:[]})
-                        loopstograft[c].append((lsi,cut_side_chains(i_Nn.deep_copy()),cut_side_chains(rloop.deep_copy()),cut_side_chains(i_Cn.deep_copy()),lei,ri.deep_copy()))
+                        loopstograft[c].append((lsi,cut_side_chains(ResidueList(i_Nn).deep_copy()),cut_side_chains(ResidueList(rloop).deep_copy()),cut_side_chains(ResidueList(i_Cn).deep_copy()),lei,ResidueList(ri).deep_copy()))
 		if output != '':
 			model = ResidueList([])	
 			for c in loopstograft:
