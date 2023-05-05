@@ -201,7 +201,7 @@ def assigncmd(args):
         print('Write results to %s' % opf)
     return assignresults
     
-def assign(seq,scheme='imgt',definition='north',dbv='latest',structuref='',loopdb='',hc='',lc='',blacklist=[]):
+def assign(seq,scheme='imgt',definition='north',dbv='latest',structuref='',loopdb='',hc='',lc='',blacklist=[], **kwargs):
     '''
     args: <sequence(s)> <numbering scheme> <cdr definition> <db version> <structure file> <loop database directory> <heavy chain ID> <light chain ID> <blacklisted PDB_CHAIN IDs>
     '''
@@ -217,8 +217,8 @@ def assign(seq,scheme='imgt',definition='north',dbv='latest',structuref='',loopd
                 seqh,seql = seq.split('/')
                 seqh = re.sub('[\W]+','',seqh)
                 seql = re.sub('[\W]+','',seql)
-                seqs.append(('{}_1'.format(seqi),seqh))
-                seqs.append(('{}_2'.format(seqi),seql))
+                seqs.append(('{}_1'.format(seqid),seqh))
+                seqs.append(('{}_2'.format(seqid),seql))
             else:
                 seqs.append((seqid,re.sub('[\W\/]+','',seq)))
     elif type(seq) == dict: # in dict
@@ -251,7 +251,7 @@ def assign(seq,scheme='imgt',definition='north',dbv='latest',structuref='',loopd
 
     ncpu = multiprocessing.cpu_count()
 
-    numberedseqs = run_anarci( seqs,scheme=scheme,ncpu=ncpu,assign_germline=False)
+    numberedseqs = run_anarci(seqs,scheme=scheme,ncpu=ncpu,assign_germline=False, **kwargs)
     
     # Import the right version of pssm database
     ip(scheme,definition,dbv)       
