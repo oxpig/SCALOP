@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 setup(name='scalop',
       version='1.0',
       description='Sequence-based antibody CAnonical LOoP structure annotation',
@@ -20,5 +20,7 @@ setup(name='scalop',
           'scalop.anarci': ['dat/HMMs/ALL*']
       },
       scripts=['bin/SCALOP'],
+      python_requires='>=3.8',
+      install_requires=['numpy', 'biopython'],
       license="BSD 3-clause"
      )
